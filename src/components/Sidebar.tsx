@@ -38,7 +38,6 @@ export function SideBar() {
   const [featureCount, setFeatureCount] = useState(0);
 
   // query features count
-
   const queryCount = async (layer: __esri.FeatureLayer) => {
     try {
       const features = await queryFeaturesCount(layer);
@@ -63,10 +62,9 @@ export function SideBar() {
     } else {
       queryCount(featureLayerSt());
     }
-
-    // filterLayers(selectTerm);
   }, [selectTerm]);
 
+  // reset notification after some time
   useEffect(() => {
     const timeId = setTimeout(() => {
       setNotification(false);
@@ -77,6 +75,7 @@ export function SideBar() {
     };
   }, [notification]);
 
+  // filter features by id's
   useEffect(() => {
     const ids = onClickIds?.map((id) => {
       return id.text;
@@ -92,7 +91,7 @@ export function SideBar() {
     }
   }, [onClickIds]);
 
-  // on map click get ids from clicked square
+  // on map click get ids from clicked square and filter them
   useEffect(() => {
     setNotification(false);
     if (view) {
@@ -141,16 +140,19 @@ export function SideBar() {
     }
   }, [view]);
 
+  // search by typed value
   const handleChange = (e: any) => {
     setSearchTerm(e.target.value);
   };
 
+  // select layers
   const handleSelectChange = (value: string) => {
     setFilteredList([]);
     setSearchTerm("");
     setSelectTerm(value);
   };
 
+  // query features
   const query = async (layer: __esri.FeatureLayer) => {
     setLoading(true);
     try {
@@ -186,6 +188,7 @@ export function SideBar() {
     }
   }, [searchTerm, data]);
 
+  // filter features on map
   const handleFilterOnMap = (e: string) => {
     const queryParamsSt = {
       where: "KDB500V.ST_500.NOM = '" + e + "'",
@@ -210,6 +213,7 @@ export function SideBar() {
       });
   };
 
+  // query features if select value changed
   useEffect(() => {
     if (selectTerm === "trapecines") {
       query(featureLayerTr());
@@ -230,6 +234,7 @@ export function SideBar() {
     // filterLayers(selectTerm);
   }, [selectTerm]);
 
+  // reset all features
   const resetFilters = () => {
     if (view) {
       view?.map.layers.map((layer) => {
