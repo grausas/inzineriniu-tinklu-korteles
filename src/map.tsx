@@ -24,13 +24,6 @@ export function init(container: HTMLDivElement) {
     app.view.destroy();
   }
 
-  const layer = new FeatureLayer({
-    url: "https://opencity.vplanas.lt/arcgis/rest/services/P_GIS_Inz_korteles/P_GIS_Inz_korteles/MapServer/0",
-    outFields: ["*"],
-    id: "staciakampes",
-    title: "Stačiakampės planšetės",
-  });
-
   const orto2022 = new Basemap({
     portalItem: {
       id: "f089d2cf232643819a0faacc679f2c4b",
@@ -58,7 +51,7 @@ export function init(container: HTMLDivElement) {
     map,
     container,
     center: [25.27043, 54.689],
-    zoom: 12,
+    zoom: 11,
     ui: {
       components: ["attribution"],
     },
@@ -147,10 +140,6 @@ export function init(container: HTMLDivElement) {
   // Adds widget below other elements in the top left corner of the view
   view.ui.add(layerListExpand, {
     position: "top-left",
-  });
-
-  layer.when(() => {
-    view.extent = layer.fullExtent;
   });
 
   return view;

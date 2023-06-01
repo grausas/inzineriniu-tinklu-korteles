@@ -15,14 +15,9 @@ import { RadioLayers } from "./RadioLayers";
 import { Notification } from "./Notification";
 import { useEffect, useContext, useState, SetStateAction } from "react";
 import { MapContext } from "../context/map-context";
-import { queryFeatures } from "../queryFeatures";
-import { queryFeaturesCount } from "../queryFeaturesCount";
-import {
-  featureLayerSt,
-  featureLayerTr,
-  featuresTable,
-  layers,
-} from "../layers";
+import { queryFeatures } from "../queries/queryFeatures";
+import { queryFeaturesCount } from "../queries/queryFeaturesCount";
+import { featuresTable } from "../layers";
 import * as reactiveUtils from "@arcgis/core/core/reactiveUtils.js";
 import resetIcon from "../assets/reset.svg";
 
@@ -75,7 +70,6 @@ export function SideBar() {
       onClickIds?.map((id) => {
         if (id.title === "stačiakampės") {
           params.push("NOMENKL_ST = '" + id.text + "'");
-          setWhereParams(whereParams);
         } else if (id.title === "trapecinės") {
           params.push("NOMENKL_TRA = '" + id.text + "'");
         }
@@ -191,6 +185,7 @@ export function SideBar() {
       }, 1000);
       return () => clearTimeout(getData);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchTerm]);
 
   // filter features on map
@@ -245,6 +240,7 @@ export function SideBar() {
         }
       });
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectTerm]);
 
   const queryByLayer = () => {
@@ -268,6 +264,7 @@ export function SideBar() {
   // query features by selected layer
   useEffect(() => {
     queryByLayer();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectTerm, page, whereParams]);
 
   // reset all features
