@@ -1,5 +1,4 @@
 import ArcGISMap from "@arcgis/core/Map";
-import FeatureLayer from "@arcgis/core/layers/FeatureLayer";
 import MapView from "@arcgis/core/views/MapView";
 import VectorTileLayer from "@arcgis/core/layers/VectorTileLayer";
 import BasemapToggle from "@arcgis/core/widgets/BasemapToggle.js";
