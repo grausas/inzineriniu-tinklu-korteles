@@ -13,22 +13,26 @@ import {
 import { Card } from "./Card";
 import { RadioLayers } from "./RadioLayers";
 import { Notification } from "./Notification";
-import { useEffect, useContext, useState } from "react";
+import { useEffect, useContext, useState, SetStateAction } from "react";
 import { MapContext } from "../context/map-context";
 import { queryFeatures } from "../queryFeatures";
 import { queryFeaturesCount } from "../queryFeaturesCount";
-import { featureLayerSt, featureLayerTr } from "../layers";
+import {
+  featureLayerSt,
+  featureLayerTr,
+  featuresTable,
+  layers,
+} from "../layers";
 import * as reactiveUtils from "@arcgis/core/core/reactiveUtils.js";
-import resetIcon from "../assets/reset-svgrepo-com.svg";
+import resetIcon from "../assets/reset.svg";
 
 export function SideBar() {
   const [data, setData] = useState<__esri.Graphic[]>([]);
   const [error, setError] = useState(false);
   const [notification, setNotification] = useState(false);
-  const [filteredList, setFilteredList] = useState<__esri.Graphic[]>();
   const [searchTerm, setSearchTerm] = useState("");
   const [selectTerm, setSelectTerm] = useState("");
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [onClickIds, setOnClickIds] =
     useState<{ text: string; title: string }[]>();
   const { view } = useContext(MapContext);
@@ -36,33 +40,22 @@ export function SideBar() {
   const [page, setPage] = useState(1);
   const [reset, setReset] = useState(false);
   const [featureCount, setFeatureCount] = useState(0);
+  const [whereParams, setWhereParams] = useState("");
+  const defaultWhereParams = "1=1";
 
   // query features count
-  const queryCount = async (layer: __esri.FeatureLayer) => {
+  const queryCount = async (
+    layer: __esri.FeatureLayer,
+    whereParams: string
+  ) => {
     try {
-      const features = await queryFeaturesCount(layer);
-      if (selectTerm === "visos") {
-        setFeatureCount(features);
-      } else {
-        setFeatureCount(features);
-      }
+      const features = await queryFeaturesCount(layer, whereParams);
+      setFeatureCount(features);
     } catch (err) {
       setError(true);
       console.log("erorr", err);
     }
   };
-
-  useEffect(() => {
-    if (selectTerm === "trapecines") {
-      queryCount(featureLayerTr());
-    } else if (selectTerm === "visos") {
-      setFeatureCount(0);
-      queryCount(featureLayerSt());
-      queryCount(featureLayerTr());
-    } else {
-      queryCount(featureLayerSt());
-    }
-  }, [selectTerm]);
 
   // reset notification after some time
   useEffect(() => {
@@ -77,17 +70,19 @@ export function SideBar() {
 
   // filter features by id's
   useEffect(() => {
-    const ids = onClickIds?.map((id) => {
-      return id.text;
-    });
-
-    const results = data.filter((obj) => {
-      const values = Object.values(obj.attributes);
-      return ids?.some((val) => values.includes(val));
-    });
-
-    if (results.length > 0) {
-      setFilteredList(results);
+    if (onClickIds && onClickIds.length > 0) {
+      console.log("onClickIds", onClickIds);
+      const params: string[] = [];
+      onClickIds?.map((id) => {
+        if (id.title === "stačiakampės") {
+          params.push("NOMENKL_ST = '" + id.text + "'");
+          setWhereParams(whereParams);
+        } else if (id.title === "trapecinės") {
+          params.push("NOMENKL_TRA = '" + id.text + "'");
+        }
+        setReset(true);
+      });
+      setWhereParams(params.join(" OR "));
     }
   }, [onClickIds]);
 
@@ -95,7 +90,7 @@ export function SideBar() {
   useEffect(() => {
     setNotification(false);
     if (view) {
-      view.popup.autoOpenEnabled = false;
+      // view.popup.autoOpenEnabled = false;
       view.on("click", (event) => {
         if (view.zoom < 11) {
           return setNotification(true);
@@ -104,33 +99,37 @@ export function SideBar() {
         view
           .hitTest(event, { include: view.map.layers })
           .then(({ results }) => {
-            const result = results;
             const arr: { text: string; title: string }[] = [];
-            if (result) {
-              result.map((item: any) => {
+            if (results) {
+              console.log("results", results);
+
+              results.map((result: any) => {
                 if (
-                  item.layer.id === "staciakampes" ||
-                  item.layer.id === "trapecines"
+                  result.layer.id === "staciakampes" ||
+                  result.layer.id === "trapecines"
                 ) {
-                  setReset(true);
-
-                  if (item.layer.id === "staciakampes") {
-                    const nomenklatura =
-                      item.graphic.attributes["KDB500V.ST_500.NOM"];
-
+                  if (result.layer.id === "staciakampes") {
+                    const nomenklatura = result.graphic.attributes.STAC_NOM;
                     arr.push({
                       text: nomenklatura,
                       title: "stačiakampės",
                     });
-                  } else if (item.layer.id === "trapecines") {
-                    const nomenklatura =
-                      item.graphic.attributes["KDB500V.TRAPEC_500.NR_SKAIC"];
-
+                  } else if (result.layer.id === "trapecines") {
+                    const nomenklatura = result.graphic.attributes.TRAP_NOM;
                     arr.push({
                       text: nomenklatura,
                       title: "trapecinės",
                     });
                   }
+                } else {
+                  view.when(() => {
+                    const popupTemplate = result.layer.createPopupTemplate();
+                    result.layer.popupTemplate = popupTemplate;
+                  });
+                  view.popup.open({
+                    featureMenuOpen: true,
+                    location: event.mapPoint,
+                  });
                 }
               });
             }
@@ -141,27 +140,28 @@ export function SideBar() {
   }, [view]);
 
   // search by typed value
-  const handleChange = (e: any) => {
+  const handleChange = (e: { target: { value: SetStateAction<string> } }) => {
     setSearchTerm(e.target.value);
   };
 
-  // select layers
+  // select layer
   const handleSelectChange = (value: string) => {
-    setFilteredList([]);
-    setSearchTerm("");
+    resetFilters();
     setSelectTerm(value);
   };
 
   // query features
-  const query = async (layer: __esri.FeatureLayer) => {
+  const query = async (
+    layer: __esri.FeatureLayer,
+    page: number,
+    whereParams: string
+  ) => {
+    setError(false);
     setLoading(true);
+    setData([]);
     try {
-      const features = await queryFeatures(layer);
-      if (selectTerm === "visos") {
-        setData((prev) => [...prev, ...features]);
-      } else {
-        setData(features);
-      }
+      const features = await queryFeatures(layer, page, whereParams);
+      setData(features);
     } catch (err) {
       setError(true);
       console.log("erorr", err);
@@ -169,32 +169,40 @@ export function SideBar() {
     setLoading(false);
   };
 
+  // search features by input value
   useEffect(() => {
-    if (searchTerm.length > 0) {
-      setReset(true);
-      const results = data.filter((item) => {
-        if (item.attributes["KDB500V.TRAPEC_500.NR_SKAIC"]) {
-          const att = item.attributes["KDB500V.TRAPEC_500.NR_SKAIC"].toString();
-          return att.toLowerCase().includes(searchTerm.toLowerCase());
-        }
-        if (item.attributes["KDB500V.ST_500.NOM"]) {
-          const att = item.attributes["KDB500V.ST_500.NOM"].toString();
-          return att.toLowerCase().includes(searchTerm.toLowerCase());
-        }
-      });
-      setFilteredList(results);
-    } else {
-      setFilteredList(data);
+    if (searchTerm.length >= 2) {
+      const search = searchTerm;
+      let params: string;
+      if (selectTerm === "trapecines") {
+        params = "NOMENKL_TRA LIKE '%" + search + "%'";
+      } else if (selectTerm === "staciakampes") {
+        params = "NOMENKL_ST LIKE '%" + search + "%'";
+      } else {
+        params =
+          "NOMENKL_ST LIKE '%" +
+          search +
+          "%'" +
+          " OR " +
+          "NOMENKL_TRA LIKE '%" +
+          search +
+          "%'";
+      }
+      const getData = setTimeout(() => {
+        setWhereParams(params);
+        setReset(true);
+      }, 1000);
+      return () => clearTimeout(getData);
     }
-  }, [searchTerm, data]);
+  }, [searchTerm]);
 
   // filter features on map
   const handleFilterOnMap = (e: string) => {
     const queryParamsSt = {
-      where: "KDB500V.ST_500.NOM = '" + e + "'",
+      where: "STAC_NOM = '" + e + "'",
     };
     const queryParamsTr = {
-      where: "KDB500V.TRAPEC_500.NR_SKAIC = " + e,
+      where: "TRAP_NOM = " + e,
     };
     reactiveUtils
       .whenOnce(() => view?.ready)
@@ -213,26 +221,60 @@ export function SideBar() {
       });
   };
 
-  // query features if select value changed
+  // add layers to map
   useEffect(() => {
     if (selectTerm === "trapecines") {
-      query(featureLayerTr());
-      view?.map.removeAll();
-      view?.map.layers.add(featureLayerTr());
+      console.log("layers", view?.map.layers);
+      view?.map.layers.map((layer) => {
+        if (layer.id === selectTerm) {
+          layer.visible = true;
+        } else {
+          layer.visible = false;
+        }
+      });
     } else if (selectTerm === "visos") {
-      setData([]);
-      query(featureLayerSt());
-      query(featureLayerTr());
-      view?.map.removeAll();
-      view?.map.layers.addMany([featureLayerSt(), featureLayerTr()]);
+      console.log("layers", view?.map.layers);
+      view?.map.layers.map((layer) => {
+        if (layer.id === "trapecines" || layer.id === "staciakampes") {
+          layer.visible = true;
+        } else {
+          layer.visible = false;
+        }
+      });
     } else {
-      view?.map.removeAll();
-      query(featureLayerSt());
-      view?.map.layers.add(featureLayerSt());
+      view?.map.layers.map((layer) => {
+        if (layer.id === selectTerm) {
+          layer.visible = true;
+        } else {
+          layer.visible = false;
+        }
+      });
     }
-
-    // filterLayers(selectTerm);
   }, [selectTerm]);
+
+  const queryByLayer = () => {
+    let params: string;
+    console.log("whereParams", whereParams);
+    if (whereParams === "") {
+      if (selectTerm === "trapecines") {
+        params = "NOMENKL_TRA IS NOT NULL";
+      } else if (selectTerm === "visos") {
+        params = defaultWhereParams;
+      } else {
+        params = "NOMENKL_ST IS NOT NULL";
+      }
+      queryCount(featuresTable(), params);
+      query(featuresTable(), page - 1, params);
+    } else {
+      queryCount(featuresTable(), whereParams);
+      query(featuresTable(), page - 1, whereParams);
+    }
+  };
+
+  // query features by selected layer
+  useEffect(() => {
+    queryByLayer();
+  }, [selectTerm, page, whereParams]);
 
   // reset all features
   const resetFilters = () => {
@@ -250,7 +292,8 @@ export function SideBar() {
     if (searchTerm.length > 0) {
       setSearchTerm("");
     }
-    setFilteredList(data);
+    setOnClickIds(undefined);
+    setWhereParams("");
     setReset(false);
   };
 
@@ -259,7 +302,7 @@ export function SideBar() {
       {notification && (
         <Notification
           text="Norėdami paspasuti ant kortelės, priartinkite žemėlapį"
-          title="Klaida"
+          title=""
         />
       )}
       <Flex
@@ -274,7 +317,7 @@ export function SideBar() {
         <Flex direction="row" bg="#ffffff">
           Rodomos
           <Text fw={500} px={3}>
-            {!loading && featureCount ? (
+            {!loading ? (
               featureCount
             ) : (
               <Loader color="red" size="xs" mx={3} variant="dots" mt={10} />
@@ -319,25 +362,26 @@ export function SideBar() {
               </Text>
             )}
             {!loading ? (
-              filteredList
-                ?.slice(
-                  (page - 1) * itemsPerPage,
-                  itemsPerPage * (page - 1) + itemsPerPage
-                )
-                .map((feature, index) => (
+              data.length === 0 ? (
+                <Text align="center" p={10} mt={40} fw={500} fz="xl">
+                  Kortelių nerasta. Pakeiskite sluoksnius arba ieškokite iš
+                  naujo.
+                </Text>
+              ) : (
+                data.map((feature, index) => (
                   <Card
                     handleOnClick={handleFilterOnMap}
                     key={index}
                     name={
-                      feature.attributes["KDB500V.INZ_KORTEL.NR_PL_T"] ||
-                      feature.attributes["KDB500V.INZ_KORTEL.NR_PL_S"]
+                      feature.attributes.NR_PL_S || feature.attributes.NR_PL_T
                     }
                     number={
-                      feature.attributes["KDB500V.TRAPEC_500.NR_SKAIC"] ||
-                      feature.attributes["KDB500V.ST_500.NOM"]
+                      feature.attributes.NOMENKL_ST ||
+                      feature.attributes.NOMENKL_TRA
                     }
                   />
                 ))
+              )
             ) : (
               <Loader color="red" size="lg" variant="dots" mt={50} />
             )}

@@ -1,5 +1,11 @@
-export async function queryFeaturesCount(layer: __esri.FeatureLayer) {
-  const count = layer.queryFeatureCount();
+export async function queryFeaturesCount(
+  layer: __esri.FeatureLayer,
+  where: string
+) {
+  const params = {
+    where: where,
+  };
+  const count = layer.queryFeatureCount(params);
 
   return count;
 }

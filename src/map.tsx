@@ -2,18 +2,16 @@ import ArcGISMap from "@arcgis/core/Map";
 import FeatureLayer from "@arcgis/core/layers/FeatureLayer";
 import MapView from "@arcgis/core/views/MapView";
 import VectorTileLayer from "@arcgis/core/layers/VectorTileLayer";
-import TileLayer from "@arcgis/core/layers/TileLayer";
 import BasemapToggle from "@arcgis/core/widgets/BasemapToggle.js";
 import Basemap from "@arcgis/core/Basemap.js";
-import MapImageLayer from "@arcgis/core/layers/MapImageLayer.js";
 import Search from "@arcgis/core/widgets/Search.js";
 import Zoom from "@arcgis/core/widgets/Zoom.js";
 import Legend from "@arcgis/core/widgets/Legend.js";
 import Home from "@arcgis/core/widgets/Home.js";
 import SimpleMarkerSymbol from "@arcgis/core/symbols/SimpleMarkerSymbol.js";
 import Expand from "@arcgis/core/widgets/Expand.js";
-import BasemapGallery from "@arcgis/core/widgets/BasemapGallery.js";
-import BasemapLayerList from "@arcgis/core/widgets/BasemapLayerList.js";
+import LayerList from "@arcgis/core/widgets/LayerList.js";
+import { layersArr } from "./layers";
 
 interface MapApp {
   view?: MapView;
@@ -30,17 +28,7 @@ export function init(container: HTMLDivElement) {
     url: "https://opencity.vplanas.lt/arcgis/rest/services/P_GIS_Inz_korteles/P_GIS_Inz_korteles/MapServer/0",
     outFields: ["*"],
     id: "staciakampes",
-  });
-
-  const darkBasemap = new Basemap({
-    portalItem: {
-      id: "ab77c15cf1094e7aa0774c8084baea86",
-    },
-  });
-  const lightBasemap = new Basemap({
-    portalItem: {
-      id: "34adce6f797846bf8e971f402a251403",
-    },
+    title: "Stačiakampės planšetės",
   });
 
   const orto2022 = new Basemap({
@@ -63,7 +51,7 @@ export function init(container: HTMLDivElement) {
 
   const map = new ArcGISMap({
     basemap: baseMap,
-    layers: [layer],
+    layers: layersArr,
   });
 
   const view = new MapView({
@@ -105,13 +93,26 @@ export function init(container: HTMLDivElement) {
   const searchExpand = new Expand({
     view,
     content: searchWidget,
+    expandTooltip: "Paieška",
   });
 
   view.ui.add(searchExpand, {
-    position: "top-right",
+    position: "top-left",
     index: 2,
   });
 
+  const legend = new Legend({
+    view: view,
+  });
+
+  const legendExpand = new Expand({
+    view,
+    content: legend,
+    expanded: true,
+    expandTooltip: "Legenda",
+  });
+
+  view.ui.add(legendExpand, "top-right");
   const zoom = new Zoom({
     view: view,
   });
@@ -127,56 +128,26 @@ export function init(container: HTMLDivElement) {
     position: "top-right",
   });
 
-  const legend = new Legend({
-    view: view,
-  });
-
-  const legendExpand = new Expand({
-    view,
-    content: legend,
-    expanded: true,
-  });
-
-  view.ui.add(legendExpand, "top-left");
-
-  // const basemapGallery = new BasemapGallery({
-  //   view: view,
-  //   source: [
-  //     baseMap,
-  //     orto2022,
-  //     darkBasemap,
-  //     orto2022,
-  //     darkBasemap,
-  //     orto2022,
-  //     darkBasemap,
-  //   ],
-  // });
-
-  // // // Add widget to the top right corner of the view
-  // view.ui.add(basemapGallery, {
-  //   position: "bottom-right",
-  // });
-
-  // const basemapLayerList = new BasemapLayerList({
-  //   view: view,
-  //   basemapTitle: "DarkVEctor",
-  //   headingLevel: 1,
-  //   visibleElements: {
-  //     statusIndicators: false,
-  //     referenceLayers: false,
-  //     errors: true,
-  //   },
-  // });
-
-  // view.ui.add(basemapLayerList, {
-  //   position: "bottom-right",
-  // });
-
   const basemapToggle = new BasemapToggle({
     view: view,
-    nextBasemap: darkBasemap,
+    nextBasemap: orto2022,
   });
-  view.ui.add(basemapToggle, "bottom-left");
+  view.ui.add(basemapToggle, "bottom-right");
+
+  const layerList = new LayerList({
+    view: view,
+  });
+
+  const layerListExpand = new Expand({
+    view,
+    content: layerList,
+    expanded: false,
+    expandTooltip: "Papildomi sluoksniai",
+  });
+  // Adds widget below other elements in the top left corner of the view
+  view.ui.add(layerListExpand, {
+    position: "top-left",
+  });
 
   layer.when(() => {
     view.extent = layer.fullExtent;
