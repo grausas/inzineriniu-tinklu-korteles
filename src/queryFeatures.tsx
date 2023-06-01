@@ -36,7 +36,5 @@ export async function queryFeatures(
   };
 
   const results = await layer.queryFeatures(params);
-  console.log(results);
-
   return results.features;
 }

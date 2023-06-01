@@ -71,7 +71,6 @@ export function SideBar() {
   // filter features by id's
   useEffect(() => {
     if (onClickIds && onClickIds.length > 0) {
-      console.log("onClickIds", onClickIds);
       const params: string[] = [];
       onClickIds?.map((id) => {
         if (id.title === "stačiakampės") {
@@ -101,8 +100,6 @@ export function SideBar() {
           .then(({ results }) => {
             const arr: { text: string; title: string }[] = [];
             if (results) {
-              console.log("results", results);
-
               results.map((result: any) => {
                 if (
                   result.layer.id === "staciakampes" ||
@@ -224,7 +221,6 @@ export function SideBar() {
   // add layers to map
   useEffect(() => {
     if (selectTerm === "trapecines") {
-      console.log("layers", view?.map.layers);
       view?.map.layers.map((layer) => {
         if (layer.id === selectTerm) {
           layer.visible = true;
@@ -233,7 +229,6 @@ export function SideBar() {
         }
       });
     } else if (selectTerm === "visos") {
-      console.log("layers", view?.map.layers);
       view?.map.layers.map((layer) => {
         if (layer.id === "trapecines" || layer.id === "staciakampes") {
           layer.visible = true;
@@ -254,7 +249,6 @@ export function SideBar() {
 
   const queryByLayer = () => {
     let params: string;
-    console.log("whereParams", whereParams);
     if (whereParams === "") {
       if (selectTerm === "trapecines") {
         params = "NOMENKL_TRA IS NOT NULL";
