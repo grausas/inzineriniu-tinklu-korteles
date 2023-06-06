@@ -10,6 +10,14 @@ import Home from "@arcgis/core/widgets/Home.js";
 import SimpleMarkerSymbol from "@arcgis/core/symbols/SimpleMarkerSymbol.js";
 import Expand from "@arcgis/core/widgets/Expand.js";
 import LayerList from "@arcgis/core/widgets/LayerList.js";
+import * as reactiveUtils from "@arcgis/core/core/reactiveUtils.js";
+import UniqueValueRenderer from "@arcgis/core/renderers/UniqueValueRenderer.js";
+import Graphic from "@arcgis/core/Graphic";
+import Renderer from "@arcgis/core/renderers/Renderer.js";
+import SimpleRenderer from "@arcgis/core/renderers/SimpleRenderer.js";
+import FeatureLayer from "@arcgis/core/layers/FeatureLayer";
+
+// import SimpleMarkerSymbol from "@arcgis/core/symbols/SimpleMarkerSymbol.js";
 import { layersArr } from "./layers";
 
 interface MapApp {
@@ -140,6 +148,26 @@ export function init(container: HTMLDivElement) {
   view.ui.add(layerListExpand, {
     position: "top-left",
   });
+
+  reactiveUtils
+    .whenOnce(() => view.ready)
+    .then(() => {
+      // let renderer = view.map.layers.getItemAt(0).renderer.clone();
+
+      const uniqueValue = view.map.layers.map((layer: any) => {
+        const rendererValue = layer.renderer.uniqueValueInfos;
+        console.log("rendererValue", rendererValue);
+        if (rendererValue) {
+          const filteredValues = rendererValue.filter((value: any) => {
+            console.log("value", value);
+            if (!value.label.includes("kryptis")) return value;
+          });
+          console.log("filteredValues", filteredValues);
+          return (layer.renderer.uniqueValueInfos = filteredValues);
+        }
+      });
+      console.log("uniqueValue", uniqueValue);
+    });
 
   return view;
 }
