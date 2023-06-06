@@ -30,7 +30,7 @@ function App() {
           header={
             <Header height={60} bg="#f8f8f8">
               <Flex align="center" h="100%">
-                <Image maw={40} src={logo1} ml={20} mr={10} />
+                <Image maw={40} src={logo1} ml={20} mr={10} alt="logo" />
                 <Title order={3} fw={400} transform="uppercase">
                   Vilniaus miesto inžinerinių tinklų kortelės
                 </Title>

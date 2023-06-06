@@ -381,6 +381,7 @@ export function SideBar() {
       </Navbar.Section>
       <Flex py={20} pos="sticky" bottom={0} bg="#ffffff" justify="center">
         <Pagination
+          aria-label="pagination"
           color="blue"
           size="sm"
           value={page}
