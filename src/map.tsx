@@ -11,11 +11,6 @@ import SimpleMarkerSymbol from "@arcgis/core/symbols/SimpleMarkerSymbol.js";
 import Expand from "@arcgis/core/widgets/Expand.js";
 import LayerList from "@arcgis/core/widgets/LayerList.js";
 import * as reactiveUtils from "@arcgis/core/core/reactiveUtils.js";
-import UniqueValueRenderer from "@arcgis/core/renderers/UniqueValueRenderer.js";
-import Graphic from "@arcgis/core/Graphic";
-import Renderer from "@arcgis/core/renderers/Renderer.js";
-import SimpleRenderer from "@arcgis/core/renderers/SimpleRenderer.js";
-import FeatureLayer from "@arcgis/core/layers/FeatureLayer";
 
 // import SimpleMarkerSymbol from "@arcgis/core/symbols/SimpleMarkerSymbol.js";
 import { layersArr } from "./layers";
