@@ -147,21 +147,16 @@ export function init(container: HTMLDivElement) {
   reactiveUtils
     .whenOnce(() => view.ready)
     .then(() => {
-      // let renderer = view.map.layers.getItemAt(0).renderer.clone();
-
-      const uniqueValue = view.map.layers.map((layer: any) => {
+      const layers = view.map.layers;
+      layers.map((layer: any) => {
         const rendererValue = layer.renderer.uniqueValueInfos;
-        console.log("rendererValue", rendererValue);
         if (rendererValue) {
           const filteredValues = rendererValue.filter((value: any) => {
-            console.log("value", value);
-            if (!value.label.includes("kryptis")) return value;
+            return !value.label.includes("kryptis");
           });
-          console.log("filteredValues", filteredValues);
-          return (layer.renderer.uniqueValueInfos = filteredValues);
+          layer.renderer.uniqueValueInfos = filteredValues;
         }
       });
-      console.log("uniqueValue", uniqueValue);
     });
 
   return view;

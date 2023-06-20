@@ -67,14 +67,14 @@ export function SideBar() {
   useEffect(() => {
     if (onClickIds && onClickIds.length > 0) {
       const params: string[] = [];
-      onClickIds?.map((id) => {
+      onClickIds.forEach((id) => {
         if (id.title === "stačiakampės") {
-          params.push("NOMENKL_ST = '" + id.text + "'");
+          params.push(`NOMENKL_ST = '${id.text}'`);
         } else if (id.title === "trapecinės") {
-          params.push("NOMENKL_TRA = '" + id.text + "'");
+          params.push(`NOMENKL_TRA = '${id.text}'`);
         }
-        setReset(true);
       });
+      setReset(true);
       setWhereParams(params.join(" OR "));
     }
   }, [onClickIds]);
@@ -345,7 +345,7 @@ export function SideBar() {
           px="xs"
         />
 
-        <RadioLayers handleRadioLayers={handleSelectChange} />
+        <RadioLayers loading={loading} handleRadioLayers={handleSelectChange} />
         <ScrollArea h="calc(100vh - 280px)" type="always" px="xs">
           <Flex direction="column" align="center" justify="center">
             {error && (
