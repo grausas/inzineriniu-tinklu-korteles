@@ -212,7 +212,6 @@ export function SideBar() {
         });
       });
   };
-  console.log("view", view?.map);
 
   // add layers to map
   useEffect(() => {
