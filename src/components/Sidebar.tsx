@@ -26,7 +26,7 @@ export function SideBar() {
   const [error, setError] = useState(false);
   const [notification, setNotification] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
-  const [selectTerm, setSelectTerm] = useState("");
+  const [selectTerm, setSelectTerm] = useState("staciakampes");
   const [loading, setLoading] = useState(true);
   const [onClickIds, setOnClickIds] =
     useState<{ text: string; title: string }[]>();
@@ -165,20 +165,17 @@ export function SideBar() {
     if (searchTerm.length >= 2) {
       const search = searchTerm;
       let params: string;
+      // Extracting the first and second column from the searchTerm
+      const [firstColumn, secondColumn] = search.split("_");
       if (selectTerm === "trapecines") {
-        params = "NOMENKL_TRA LIKE '%" + search + "%'";
+        params = `NOMENKL_TRA LIKE '%${firstColumn}%' AND NR_PL_T LIKE '%${secondColumn !== undefined ? secondColumn : ""}%'`;
       } else if (selectTerm === "staciakampes") {
-        params = "NOMENKL_ST LIKE '%" + search + "%'";
+        params = `NOMENKL_ST LIKE '%${firstColumn}%' AND NR_PL_S LIKE '%${secondColumn !== undefined ? secondColumn : ""}%'`;
       } else {
         params =
-          "NOMENKL_ST LIKE '%" +
-          search +
-          "%'" +
-          " OR " +
-          "NOMENKL_TRA LIKE '%" +
-          search +
-          "%'";
+          `NOMENKL_TRA LIKE '%${firstColumn}%' AND NR_PL_T LIKE '%${secondColumn !== undefined ? secondColumn : ""}%' OR NOMENKL_ST LIKE '%${firstColumn}%' AND NR_PL_S LIKE '%${secondColumn !== undefined ? secondColumn : ""}%'`;
       }
+
       const getData = setTimeout(() => {
         setWhereParams(params);
         setReset(true);
@@ -187,6 +184,7 @@ export function SideBar() {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchTerm]);
+
 
   // filter features on map
   const handleFilterOnMap = (e: string) => {

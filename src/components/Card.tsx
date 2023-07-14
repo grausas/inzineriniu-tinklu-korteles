@@ -33,7 +33,7 @@ export function Card({ name, number, color, handleOnClick }: Card) {
           px="xs"
           onClick={() => handleOnClick(number)}
         >
-          {number}/{name}
+          {number}_{name}
         </Text>
         <Text>
           <a
